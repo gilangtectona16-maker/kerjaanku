@@ -61,4 +61,9 @@ class Slot extends Model
     {
         return $this->activeTransaction()->exists();
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(ParkingTransaction::class);
+    }
 }

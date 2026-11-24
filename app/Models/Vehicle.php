@@ -12,9 +12,7 @@ class Vehicle extends Model
 {
     use HasFactory;
 
-    /**
-     * @return HasMany<ParkingTransaction, $this>
-     */
+    protected $fillable = ['plate_number', 'owner_name'];
     public function parkingTransactions(): HasMany
     {
         return $this->hasMany(ParkingTransaction::class);
