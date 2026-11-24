@@ -1,4 +1,4 @@
-    <?php
+<?php
 
     // Route aplikasi dipisah aja ya per modul agar gak bentrok saat kerja tim.
     // Setiap anggota hanya menyunting berkas modul miliknya.

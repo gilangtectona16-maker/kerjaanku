@@ -73,13 +73,52 @@ class ParkirController extends Controller
         return redirect()->route('parkir.index')->with('success', 'Kendaraan berhasil dicatat masuk.');
     }
 
-    public function keluar()
+    public function keluar(Request $request)
     {
-        return 'Halaman Kendaraan Keluar';
+        $parkir = ParkingTransaction::active()
+            ->with(['vehicle', 'slot.block'])
+            ->when($request->q, fn ($q, $s) => $q->whereHas('vehicle',
+                fn ($v) => $v->where('plate_number', 'like', "%{$s}%")))
+            ->orderBy('entered_at')
+            ->get();
+
+        return view('parkir.keluar', compact('parkir'));
     }
 
     public function storeKeluar(Request $request)
     {
-        //
+        $request->validate([
+            'transaction_id' => ['required', 'exists:parking_transactions,id'],
+        ]);
+
+        $updated = ParkingTransaction::active()
+            ->whereKey($request->transaction_id)
+            ->update([
+                'exited_at'    => now(),
+                'exit_user_id' => auth()->id(),
+                'updated_at'   => now(),
+            ]);
+
+        if (! $updated) {
+            return back()->with('error', 'Transaksi sudah selesai atau tidak ditemukan.');
+        }
+
+        return redirect()->route('parkir.keluar')->with('success', 'Kendaraan berhasil dicatat keluar.');
+    }
+
+    public function riwayat(Request $request)
+    {
+        $riwayat = ParkingTransaction::with(['vehicle', 'slot.block', 'entryUser', 'exitUser'])
+            ->when($request->q, fn ($q, $s) => $q->whereHas('vehicle',
+                fn ($v) => $v->where('plate_number', 'like', "%{$s}%")))
+            ->when($request->dari, fn ($q, $d) => $q->whereDate('entered_at', '>=', $d))
+            ->when($request->sampai, fn ($q, $d) => $q->whereDate('entered_at', '<=', $d))
+            ->when($request->status === 'parkir', fn ($q) => $q->whereNull('exited_at'))
+            ->when($request->status === 'keluar', fn ($q) => $q->whereNotNull('exited_at'))
+            ->latest('entered_at')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('parkir.riwayat', compact('riwayat'));
     }
 }

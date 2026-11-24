@@ -11,4 +11,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('parkir/keluar', [ParkirController::class, 'keluar'])->name('parkir.keluar');
     Route::post('parkir/keluar', [ParkirController::class, 'storeKeluar'])->name('parkir.keluar.store');
+
+    Route::get('laporan/riwayat', [ParkirController::class, 'riwayat'])->name('laporan.riwayat');
 });
